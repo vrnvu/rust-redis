@@ -42,7 +42,7 @@ fn process_set(cmd: Set, db: &Db) -> Frame {
 
 fn process_get(cmd: Get, db: &Db) -> Frame {
 	if let Some(value) = db.read().unwrap().get(cmd.key()) {
-		Frame::Bulk(value.clone().into())
+		Frame::Bulk(value.clone())
 	} else {
 		Frame::Null
 	}
