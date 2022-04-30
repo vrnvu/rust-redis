@@ -3,11 +3,12 @@ use core::time;
 use std::thread;
 
 use mini_redis::{client};
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{mpsc::{self}, oneshot::{self}};
 
 use bytes::Bytes;
 
 type Responder<T> = oneshot::Sender<mini_redis::Result<T>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[derive(Debug)]
 enum Command {
@@ -23,7 +24,7 @@ enum Command {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
 	let (tx, mut rx) = mpsc::channel(32);
 
 	let tx2 = tx.clone();
@@ -74,7 +75,9 @@ async fn main() {
 		}
 	});
 
-	t1.await.unwrap();
-	t2.await.unwrap();
-	manager.await.unwrap();
+	t1.await?;
+	t2.await?;
+	manager.await?;
+
+	Ok(())
 }
