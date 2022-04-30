@@ -1,9 +1,9 @@
 
 use core::time;
-use std::thread;
+use std::{thread};
 
 use mini_redis::{client};
-use tokio::sync::{mpsc::{self}, oneshot::{self}};
+use tokio::sync::{mpsc::{self, error::SendError}, oneshot::{self}};
 
 use bytes::Bytes;
 
@@ -38,10 +38,11 @@ async fn main() -> Result<()> {
 
 		// i want to get world so I sleep the thread
 		thread::sleep(time::Duration::from_millis(10));
-		tx.send(cmd).await.unwrap();
+		tx.send(cmd).await?;
 
 		let res = resp_rx.await;
 		println!("t1 got {:?}", res);
+		Ok::<(), SendError<Command>>(()) 
 	});
 
 	let t2 = tokio::spawn(async move {
@@ -52,10 +53,12 @@ async fn main() -> Result<()> {
 			resp: resp_tx,
 		};
 
-		tx2.send(cmd).await.unwrap();
+		tx2.send(cmd).await?;
 
 		let res = resp_rx.await;
 		println!("t2 got {:?}", res);
+
+		Ok::<(), SendError<Command>>(()) 
 	});
 
 	let manager = tokio::spawn(async move {
@@ -75,8 +78,8 @@ async fn main() -> Result<()> {
 		}
 	});
 
-	t1.await?;
-	t2.await?;
+	t1.await??;
+	t2.await??;
 	manager.await?;
 
 	Ok(())
